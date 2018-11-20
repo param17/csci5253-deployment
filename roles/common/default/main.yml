@@ -1,0 +1,5 @@
+common:
+  java_version: 8u191
+  java_home: "/usr/lib/jvm/java-8"
+  java_download: "https://download.oracle.com/otn-pub/java/jdk/8u191-b12/2787e4a523244c269598db4e85c51e0c/jdk-8u191-linux-x64.tar.gz"
+  java_jce_download: "http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip"

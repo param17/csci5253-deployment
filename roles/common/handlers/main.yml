@@ -1,0 +1,3 @@
+- name: restart cron
+  sudo: yes
+  command: service cron restart

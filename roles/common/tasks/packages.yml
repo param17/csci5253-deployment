@@ -1,0 +1,10 @@
+- name: Install pre-req packages
+  sudo: yes
+  apt: pkg={{ item }} state=installed update_cache=yes
+  with_items:
+    - wget
+    - gzip
+    - build-essential
+    - tar
+    - python-dev
+    - python-pip

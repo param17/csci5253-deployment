@@ -1,0 +1,11 @@
+- include: timezone.yml
+- include: packages.yml
+- include: ssh-config.yml
+- include: java.yml
+
+- name: set jave_home value
+  template:
+    src: java_home.sh.j2
+    dest: /etc/profile.d/java_home.sh
+    mode: 0644
+when: java_home is not defined and java_home == ''
