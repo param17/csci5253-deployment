@@ -8,3 +8,10 @@
     - tar
     - python-dev
     - python-pip
+
+- name: Install pip packages
+  sudo: yes
+  pip: name={{ item }} state=latest
+  with_items:
+    - nltk
+    - mongo-connector
