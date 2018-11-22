@@ -1,5 +1,13 @@
 # N. Virginia
 region: us-east-1
 
+master_instance_type: m4.xlarge
+slave_instance_type: t2.large
+slave_count: 3
+
 boto_profile: SparkBuster
 remote_user: ubuntu
+
+hadoop_binary_url: https://www-us.apache.org/dist/hadoop/common/hadoop-3.0.3/hadoop-3.0.3.tar.gz
+hadoop_version: 3.0.3
+hadoop_root: /opt/hadoop

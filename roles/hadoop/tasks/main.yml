@@ -1,0 +1,54 @@
+- name: get hadoop binary
+  sudo: yes
+  get_url: url={{ hadoop_binary_url }} dest="/tmp/hadoop-{{ hadoop_version }}.tgz"
+
+- name: extract downloaded hadoop binary
+  sudo: yes
+  unarchive: copy=no src="/tmp/hadoop-{{ hadoop_version }}.tgz" dest=/opt/
+
+- name: set symbolic link for opt/hadoop
+  sudo: yes
+  file: src=/opt/hadoop-{{ hadoop_version }} dest={{ hadoop_root }} state=link
+
+- name: add hadoop location to path variable
+  sudo: yes
+  lineinfile:
+    dest=/etc/environment
+    state=present
+    regexp='PATH=(["]*)((?!.*?{{ hadoop_root }}/bin).*?)(["]*)$'
+    line="PATH=\1\2:{{ hadoop_root }}/bin\3"
+    backrefs=yes
+
+- name: configuring the environment for hadoop
+  sudo: yes
+  template: src=conf/hadoop-environment.sh.j2 dest={{ hadoop_root }}/etc/hadoop/hadoop-env.sh mode="u=rwx,g=rx,o=rx"
+  tags: hadoop_config
+
+- name: configuring core-site.xml for hadoop
+  sudo: yes
+  template: src=conf/core-site-config.xml.j2 dest="{{ hadoop_root }}/etc/hadoop/core-site.xml" group=root owner=root
+
+- name: configuring hadoop master
+  sudo: yes
+  template: src=conf/hadoop-masters.j2 dest="{{ hadoop_root }}/etc/hadoop/masters" group=root owner=root
+
+- name: format hadoop namenode for master
+  sudo: yes
+  command: "{{ hadoop_root }}/bin/hadoop namenode -format creates=/tmp/hadoop-root/dfs/name"
+  when: "hadoop_node_type == 'master'"
+
+- name: running stop script for hadoop cluster
+  sudo: yes
+  shell: "{{ hadoop_root }}/sbin/stop-dfs.sh"
+  tags: stop-hadoop
+  when: "hadoop_node_type == 'master'"
+
+- name: running start script for hadoop cluster
+  sudo: yes
+  shell: "{{ hadoop_root }}/sbin/start-dfs.sh"
+  tags: start-hadoop
+  when: "hadoop_node_type == 'master'"
+
+- name: configuring hadoop slaves
+  sudo: yes
+  template: src=conf/hadoop-slaves.j2 dest="{{ hadoop_root }}/etc/hadoop/slaves" group=root owner=root
