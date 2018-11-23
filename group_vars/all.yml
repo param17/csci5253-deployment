@@ -5,8 +5,16 @@ master_instance_type: m4.xlarge
 slave_instance_type: t2.large
 slave_count: 3
 
+ec2_key_pair: csci5253
+ec2_master_volume_size: 100
+ec2_slave_volume_size: 20
+
 boto_profile: SparkBuster
 remote_user: ubuntu
+
+spark_binary_url: https://www-us.apache.org/dist/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz
+spark_version: 2.3.1-bin-hadoop2.7
+spark_root: /opt/spark
 
 hadoop_binary_url: https://www-us.apache.org/dist/hadoop/common/hadoop-3.0.3/hadoop-3.0.3.tar.gz
 hadoop_version: 3.0.3

@@ -1,0 +1,57 @@
+- name: generating RSA key
+  sudo: yes
+  user: name=root generate_ssh_key=yes
+
+- name: get rsa public key
+  sudo: yes
+  fetch: src=/root/.ssh/id_rsa.pub dest=/tmp/id_rsa.tmp flat=yes
+
+- name: add authorized key for spark slaves
+  local_action: shell cat /tmp/id_rsa.tmp | ssh ubuntu@{{ item.public_ip }} "sudo su -c 'cat >> /root/.ssh/authorized_keys'"
+  with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
+
+- name: add authorized key for master too
+  local_action: shell cat /tmp/id_rsa.tmp | ssh ubuntu@{{ hostvars.localhost.spark_master.tagged_instances[0].public_ip }} "sudo su -c 'cat >> /root/.ssh/authorized_keys'"
+
+- name: remove the copied rsa key file
+  local_action: file  path=/tmp/id_rsa.tmp state=absent
+
+- name: configuring master node
+  local_action: shell echo 'export SPARK_PUBLIC_DNS="{{ item.public_ip }}"' | ssh ubuntu@{{ item.public_ip }} "sudo su -c 'cat >> {{ spark_root }}/conf/spark-env.sh'"
+  with_items: "{{ hostvars.localhost.spark_master.tagged_instances }}"
+  tags: config_spark
+
+- name: configuring slaves node
+  local_action: shell echo 'export SPARK_PUBLIC_DNS="{{ item.public_ip }}"' | ssh ubuntu@{{ item.public_ip }} "sudo su -c 'cat >> {{ spark_root }}/conf/spark-env.sh'"
+  with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
+  tags: config_spark
+
+- name: adding spark slave node ips to known_hosts
+  sudo: yes
+  shell: ssh-keyscan -H {{ item.private_ip }} >> ~/.ssh/known_hosts
+  with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
+
+- name: adding spark master node ip to known_hosts too
+  sudo: yes
+  shell: ssh-keyscan -H {{ item.private_dns_name }} >> ~/.ssh/known_hosts
+  with_items: "{{ hostvars.localhost.spark_master.tagged_instances }}"
+
+- name: add 0.0.0.0 (secondary namenode) to known_host
+  sudo: yes
+  shell: ssh-keyscan -H 0.0.0.0 >> ~/.ssh/known_hosts
+
+- name: add slave ips to spark conf/slaves
+  sudo: yes
+  template: src=conf/slaves.j2 dest={{ spark_root }}/conf/slaves
+  tags: config_spark
+
+- name: stop spark workers script
+  sudo: yes
+  shell: "{{ spark_root }}/sbin/stop-all.sh"
+  tags: stop
+
+- name: start spark cluster script
+  sudo: yes
+  shell: "{{ spark_root }}/sbin/start-all.sh"
+  tags: start
+
