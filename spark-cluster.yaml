@@ -1,0 +1,17 @@
+- name: creating ec2 instances on AWS
+  hosts: localhost
+  roles:
+  - create_spark_cluster
+
+- name: installing apache spark
+  hosts: tag_sw_spark
+  roles:
+  - common
+  - spark_common
+
+- name: configuring spark master node
+  hosts: tag_role_spark_master
+  roles:
+  - common
+  - spark_master
+
