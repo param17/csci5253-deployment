@@ -1,0 +1,58 @@
+- include: set-security-groups.yml
+
+- name: get the ubuntu trusty AMI
+  ec2_ami_search: distro=ubuntu release=trusty region={{ region }} virt=hvm
+  register: ubuntu_image
+  tags: always
+
+- name: start master node
+  ec2:
+    image: "{{ ubuntu_image.amiart the spark slaves }}"
+    region: "{{ region }}"
+    instance_type: "{{ master_instance_type }}"
+    profile: "{{ boto_profile }}"
+    key_name: "{{ ec2_key_pair }}"
+    group: [http, ssh, outbound, spark, hadoop]
+    instance_tags: { Name: spark_master, sw: spark, role: spark_master }
+    exact_count: 1
+    count_tag: { ds_role: spark_master }
+    volumes:
+      - device_name: /dev/sda1
+        volume_type: gp2
+        volume_size: "{{ ec2_master_volume_size }}"
+        delete_on_termination: true
+    wait: yes
+  register: spark_master
+  tags: always
+
+- name: start slaves nodes
+  ec2:
+    image: "{{ ubuntu_image.ami }}"
+    region: "{{ region }}"
+    instance_type: "{{ slave_instance_type }}"
+    profile: "{{ boto_profile }}"
+    key_name: "{{ ec2_key_pair }}"
+    group: [http, ssh, outbound, spark, hadoop]
+    instance_tags: { Name: spark_slave, sw: spark, role: spark_slave }
+    exact_count: "{{ slave_count }}"
+    count_tag: { ds_role: spark_slave }
+    volumes:
+      - device_name: /dev/sda1
+        volume_type: gp2
+        volume_size: "{{ ec2_slave_volume_size }}"
+        delete_on_termination: true
+    wait: yes
+  register: spark_slave
+  tags: always
+
+- name: check if ssh is running for spark master
+  wait_for: host={{ item.public_dns_name }} port=22 search_regex=OpenSSH
+  when: item.public_dns_name is defined
+  with_items: "{{ spark_master.tagged_instances }}"
+  tags: always
+
+- name: check if ssh is running for spark slaves
+  wait_for: host={{ item.public_dns_name }} port=22 search_regex=OpenSSH
+  when: item.public_dns_name is defined
+  with_items: "{{ spark_slave.tagged_instances }}"
+  tags: always

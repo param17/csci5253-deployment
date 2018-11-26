@@ -1,0 +1,106 @@
+- name: security group for ssh communication
+  ec2_group:
+    name: ssh
+    description: security group for ssh communication
+    region: "{{ region }}"
+    profile: "{{ boto_profile }}"
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+
+- name: security group for http and https access
+  ec2_group:
+    name: http
+    description: security group for http and https access
+    region: "{{ region }}"
+    profile: "{{ boto_profile }}"
+    rules:
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 8080
+        to_port: 8080
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 8888
+        to_port: 8888
+        cidr_ip: 0.0.0.0/0
+
+- name: security group for spark communication
+  ec2_group:
+    name: spark
+    description: security group for spark communication
+    region: "{{ region }}"
+    profile: "{{ boto_profile }}"
+    rules:
+      - proto: tcp
+        from_port: 6066
+        to_port: 6066
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 8080
+        to_port: 8081
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 1
+        to_port: 65535
+        cidr_ip: "{{ spark-worker1-ip }}"
+      - proto: udp
+        from_port: 1
+        to_port: 65535
+        cidr_ip: "{{ spark-worker1-ip }}"
+      - proto: tcp
+        from_port: 1
+        to_port: 65535
+        cidr_ip: "{{ spark-worker2-ip }}"
+      - proto: udp
+        from_port: 1
+        to_port: 65535
+        cidr_ip: "{{ spark-worker2-ip }}"
+      - proto: tcp
+        from_port: 1
+        to_port: 65535
+        cidr_ip: "{{ spark-worker3-ip }}"
+      - proto: udp
+        from_port: 1
+        to_port: 65535
+        cidr_ip: "{{ spark-worker3-ip }}"
+
+- name: security group for hadoop communication
+  ec2_group:
+    name: hadoop
+    description: security group for hadoop communication
+    region: "{{ region }}"
+    profile: "{{ boto_profile }}"
+    rules:
+      - proto: tcp
+        from_port: 9000
+        to_port: 9001
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 50030
+        to_port: 50070
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 1
+        to_port: 65535
+        cidr_ip: "{{ hadoop-ip }}"
+  tags: hadoop
+
+- name: security group for outbound communication
+  ec2_group:
+    name: outbound
+    description: security group for outbound communication
+    region: "{{ region }}"
+    profile: "{{ boto_profile }}"
+    rules_egress:
+      - proto: all
+        cidr_ip: 0.0.0.0/0

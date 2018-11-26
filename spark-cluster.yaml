@@ -15,3 +15,12 @@
   - common
   - spark_master
 
+- name: installing apache hadoop slaves
+  hosts: tag_role_spark_slave
+  roles:
+  - { role: setup_hadoop, hadoop_node_type: slave}
+
+- name: installing apache hadoop master node
+  hosts: tag_role_spark_master
+  roles:
+  - { role: setup_hadoop, hadoop_node_type: master}
